@@ -32,9 +32,13 @@ class Server:
                 self.login_handler.login(request, client_socket)
             elif endpoint == "/food_menu":
                 self.view_food_menu(client_socket, request)
+            elif endpoint == "/delete-menu-item":
+                self.delete_menu_item(client_socket, request)
             elif endpoint == "/add-menu-item":
                 print(request)
-                self.add_food_item(client_socket, request)
+                self.add_menu_item(client_socket, request)
+            elif endpoint == "/update-menu-item":
+                self.update_menu_item(client_socket, request)
             else:
                 response = {"status": "failure", "message": "Invalid endpoint"}
                 client_socket.sendall(json.dumps(response).encode())
@@ -43,7 +47,22 @@ class Server:
         finally:
             client_socket.close()
 
-    def add_food_item(self, client_socket, request):
+    def update_menu_item(self, client_socket, request):
+        print(request)
+        role_name = request.get("RoleName")
+        menuitemid = request.get("MenuItemID")
+        new_price = request.get("Price")
+        new_availability = request.get("AvailabilityStatus")
+        print(role_name, menuitemid, new_availability, new_price)
+        if role_name == "Admin":
+            response = self.db_handler.update_menuItem(menuitemid, new_price, new_availability)
+            if "success" in response:
+                response = {"status": "success", "message": "Item successfully Updated"}
+            else:
+                response = {"status": "success", "message": "There is error"}
+            client_socket.sendall(json.dumps(response).encode())
+
+    def add_menu_item(self, client_socket, request):
         print(request)
         role_name = request.get("RoleName")
         print(f"Inside add food item {role_name} {request}")
@@ -56,6 +75,17 @@ class Server:
                 response = {"status": "success", "message": "There is error"}
             client_socket.sendall(json.dumps(response).encode())
 
+    def delete_menu_item(self, client_socket, request):
+        role_name = request.get("RoleName")
+        menuitemid = request.get("MenuItemID")
+        if role_name == "Admin":
+            response = self.db_handler.delete_menuItem(menuitemid)
+            if "success" in response:
+                response = {"status": "success", "message": "Item successfully Deleted"}
+            else:
+                response = {"status": "success", "message": "There is error"}
+            client_socket.sendall(json.dumps(response).encode())
+
     def view_food_menu(self, client_socket, request):
         role_name = request.get("role_name")
         if role_name in ["Admin", "Chef"]:
@@ -63,7 +93,6 @@ class Server:
             response = {"status": "success", "menu": menu}
         else:
             response = {"status": "failure", "message": "Access denied"}
-        print(response)
         client_socket.sendall(json.dumps(response).encode())
 
 if __name__ == "__main__":
