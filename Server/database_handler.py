@@ -30,6 +30,40 @@ class DatabaseHandler:
         if result:
             return {"ID": result[0], "Name": result[1], "RoleName": result[2]}
         return None
+    
+    def get_food_menu(self):
+        cursor = self.conn.cursor()
+        query = "SELECT ID, Name, Price, AvailabilityStatus FROM menuitem"
+        cursor.execute(query)
+        result = cursor.fetchall()
+        cursor.close()
+        menu = []
+        for item in result:
+            menu.append({
+                "ID": item[0],
+                "Name": item[1],
+                "Price": item[2],
+                "AvailabilityStatus": item[3]
+            })
+        return menu
+    
+    def add_menuItem(self, data):
+        print(data)
+        cursor = self.conn.cursor()
+        query = """
+        INSERT INTO menuitem (Name, Price, AvailabilityStatus, MealTypeID)
+        VALUES (%s, %s, %s, %s)
+        """
+        print(data)
+        values = (data["Name"], int(data["Price"]), data["AvailabilityStatus"], data["MealTypeID"])
+        try:
+            cursor.execute(query, values)
+            self.conn.commit()
+            return "success"
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            self.conn.rollback()
+            return "error"
 
     def close(self):
         if self.conn:
