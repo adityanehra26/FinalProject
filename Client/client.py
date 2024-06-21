@@ -39,7 +39,6 @@ def login(username, password):
 
 
 if __name__ == "__main__":
-    # Example usage
     username = input("Enter username: ")
     password = input("Enter password: ")
     login_response = login(username, password)

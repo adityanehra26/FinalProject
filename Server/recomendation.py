@@ -1,6 +1,6 @@
 from database_handler import DatabaseHandler
 
-class Recommendation:
+class Recomendation:
     def __init__(self, db_handler):
         self.db_handler = db_handler
 
@@ -21,7 +21,7 @@ class Recommendation:
             menu_item_id = item["MenuItemID"]
             menu_item_name = item["MenuItem"]
             avg_rating = item["AvgRating"]
-            comment = item.get("Comment", "")  # Fetching comment, if available
+            comment = item.get("Comment", "")  
             sentiment_score = self.calculate_sentiment_score(comment)
 
             combined_score = avg_rating + sentiment_score
@@ -53,22 +53,4 @@ class Recommendation:
         return recommendations
 
 
-if __name__ == "__main__":
-    # Replace with your actual database connection details
-    db_handler = DatabaseHandler(host="localhost", user="root", password="12345678", database="cafeteria")
-    
-    # Connect to the database
-    db_handler.connect()
-    
-    # Create an instance of Recommendation
-    recommendation = Recommendation(db_handler)
-    
-    # Example: Get recommendations
-    recommendations = recommendation.recommend_food_items()
-    print("Recommendations:")
-    print(f"Breakfast: {recommendations['Breakfast']}")
-    print(f"Lunch: {recommendations['Lunch']}")
-    print(f"Dinner: {recommendations['Dinner']}")
-    
-    # Close the database connection
-    db_handler.close()
+

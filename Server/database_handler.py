@@ -47,6 +47,38 @@ class DatabaseHandler:
             })
         return menu
     
+    def get_feedback_details(self):
+        cursor = self.conn.cursor()
+        query = """
+        SELECT 
+            f.ID,
+            u.Name AS UserName,
+            m.Name AS FoodName,
+            f.Rating,
+            f.Comment,
+            f.Date
+        FROM 
+            feedback f
+        JOIN 
+            user u ON f.UserID = u.ID
+        JOIN 
+            menuitem m ON f.MenuItemID = m.ID
+        """
+        cursor.execute(query)
+        result = cursor.fetchall()
+        cursor.close()
+        feedback_details = []
+        for item in result:
+            feedback_details.append({
+                "FeedbackID": item[0],
+                "UserName": item[1],
+                "FoodName": item[2],
+                "Rating": item[3],
+                "Comment": item[4],
+                "Date": item[5].strftime('%Y-%m-%d')  # Convert date to string
+            })
+        return feedback_details
+    
     def add_menuItem(self, data):
         cursor = self.conn.cursor()
         query = """
@@ -75,9 +107,7 @@ class DatabaseHandler:
         WHERE ID = %s
         """
         try:
-            # Delete related feedback entries
             cursor.execute(delete_feedback_query, (menu_item_id,))
-            # Delete the menu item
             cursor.execute(delete_menu_item_query, (menu_item_id,))
             self.conn.commit()
             return "success"

@@ -16,6 +16,17 @@ class FoodMenu:
             availability = "Yes" if item['AvailabilityStatus'] == 1 else "No"
             print(f"{item['ID']:<5} {item['Name']:<35} {item['Price']:<10} {availability:<20}")
 
+    def view_feedback(self):
+        endpoint = "/view-feedback"
+        data = {"role_name": self.role}
+        print(endpoint, data)
+        response = self.server_communicator.send_request(endpoint, data)
+        print(response)
+        print(f"{'FoodName':<35} {'UserName':<25} {'Rating':<10} {'Comment':<70} {'Date':<20}")
+        
+        for item in response['feedback']:
+            print(f"{item['FoodName']:<35} {item['UserName']:<25} {item['Rating']:<10} {item['Comment']:<70} {item['Date']:<20}")
+
     def roll_out_menu(self):
         endpoint = "/view-recomendation"
         data = {"RoleName": self.role}
@@ -31,7 +42,7 @@ class FoodMenu:
         for item in response['recomendations']['Breakfast']:
             print(f"{item['ID']:<5} {item['Name']:<35}")
             
-        food_id_for_roll_out["Breakfast"] = int(input("Enter the Two ID for breakfast : ").split())
+        food_id_for_roll_out["Breakfast"] = input("Enter the Two ID for breakfast : ").split()
         
         print("Lunch Recomendations\n")
         for item in response['recomendations']['Lunch']:

@@ -14,7 +14,7 @@ class Chef(User):
             if(choice == 1):
                 self.food_menu.view_menu()
             elif(choice == 2):
-                print("See Feeback")
+                self.food_menu.view_feedback()
             elif(choice == 3):
                 self.food_menu.roll_out_menu()
             elif(choice == 4):
