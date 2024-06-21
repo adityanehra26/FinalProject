@@ -3,6 +3,7 @@ import threading
 import json
 from database_handler import DatabaseHandler
 from login_handler import LoginHandler
+from recomendation import Recommendation
 
 class Server:
     def __init__(self, host, port, db_host, db_user, db_password, db_name):
@@ -10,6 +11,7 @@ class Server:
         self.port = port
         self.db_handler = DatabaseHandler(db_host, db_user, db_password, db_name)
         self.login_handler = LoginHandler(self.db_handler)
+        self.recomendation_engine = Recommendation(self.db_handler)
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     def start_server(self):
@@ -39,6 +41,10 @@ class Server:
                 self.add_menu_item(client_socket, request)
             elif endpoint == "/update-menu-item":
                 self.update_menu_item(client_socket, request)
+            elif endpoint == "/roll-out-menu":
+                self.roll_out_menu(client_socket, request)
+            elif endpoint == "/view-recomendation":
+                self.view_recomendation(client_socket, request)
             else:
                 response = {"status": "failure", "message": "Invalid endpoint"}
                 client_socket.sendall(json.dumps(response).encode())
@@ -46,6 +52,18 @@ class Server:
             print(f"Error: {e}")
         finally:
             client_socket.close()
+
+    def roll_out_menu(self):
+        pass
+    
+    def view_recomendation(self, client_socket, request):
+        role_name = request.get("RoleName")
+        print(request, role_name)
+        if role_name == "Chef":
+            response = self.recomendation_engine.recommend_food_items()
+            print(response)
+            response = {"status": "success", "recomendations": response}
+            client_socket.sendall(json.dumps(response).encode())
 
     def update_menu_item(self, client_socket, request):
         print(request)

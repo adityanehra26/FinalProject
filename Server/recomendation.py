@@ -15,9 +15,11 @@ class Recommendation:
     def recommend_food_items(self):
         avg_ratings = self.db_handler.calculate_average_ratings()
         recommendations = {"Breakfast": [], "Lunch": [], "Dinner": []}
+        seen_items = {"Breakfast": set(), "Lunch": set(), "Dinner": set()}
 
         for item in avg_ratings:
-            menu_item = item["MenuItem"]
+            menu_item_id = item["MenuItemID"]
+            menu_item_name = item["MenuItem"]
             avg_rating = item["AvgRating"]
             comment = item.get("Comment", "")  # Fetching comment, if available
             sentiment_score = self.calculate_sentiment_score(comment)
@@ -25,23 +27,28 @@ class Recommendation:
             combined_score = avg_rating + sentiment_score
 
             meal_type = item["MealTypeID"]
-            recommendation = {"MenuItem": menu_item, "Score": combined_score}
+            recommendation = {"MenuItemID": menu_item_id, "MenuItem": menu_item_name, "Score": combined_score}
 
+            category = ""
             if meal_type == 1:
-                recommendations["Breakfast"].append(recommendation)
+                category = "Breakfast"
             elif meal_type == 2:
-                recommendations["Lunch"].append(recommendation)
+                category = "Lunch"
             elif meal_type == 3:
-                recommendations["Dinner"].append(recommendation)
+                category = "Dinner"
 
-        # Sort recommendations by score in descending order
+            if menu_item_id not in seen_items[category]:
+                recommendations[category].append(recommendation)
+                seen_items[category].add(menu_item_id)
+
+        # Sort recommendations by score in descending order and keep only top 3 recommendations
         for category in recommendations:
             recommendations[category].sort(key=lambda x: x["Score"], reverse=True)
-            recommendations[category] = recommendations[category][:3]  # Keep only top 3 recommendations
+            recommendations[category] = recommendations[category][:3]
 
-        # Extract menu item names from recommendations
+        # Extract menu item IDs and names from recommendations
         for category in recommendations:
-            recommendations[category] = [rec["MenuItem"] for rec in recommendations[category]]
+            recommendations[category] = [{"ID": rec["MenuItemID"], "Name": rec["MenuItem"]} for rec in recommendations[category]]
 
         return recommendations
 
@@ -49,6 +56,9 @@ class Recommendation:
 if __name__ == "__main__":
     # Replace with your actual database connection details
     db_handler = DatabaseHandler(host="localhost", user="root", password="12345678", database="cafeteria")
+    
+    # Connect to the database
+    db_handler.connect()
     
     # Create an instance of Recommendation
     recommendation = Recommendation(db_handler)
@@ -59,3 +69,6 @@ if __name__ == "__main__":
     print(f"Breakfast: {recommendations['Breakfast']}")
     print(f"Lunch: {recommendations['Lunch']}")
     print(f"Dinner: {recommendations['Dinner']}")
+    
+    # Close the database connection
+    db_handler.close()

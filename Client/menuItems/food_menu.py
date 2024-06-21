@@ -16,7 +16,37 @@ class FoodMenu:
             availability = "Yes" if item['AvailabilityStatus'] == 1 else "No"
             print(f"{item['ID']:<5} {item['Name']:<35} {item['Price']:<10} {availability:<20}")
 
-    
+    def roll_out_menu(self):
+        endpoint = "/view-recomendation"
+        data = {"RoleName": self.role}
+        response = self.server_communicator.send_request(endpoint, data)
+
+        print(response)
+        print("\n\n")
+        print(f"{'ID':<5} {'Name':<35}")
+        
+        food_id_for_roll_out = {"Breakfast": [], "Lunch": [], "Dinner": []}
+
+        print("BreakFast Recomendations\n")
+        for item in response['recomendations']['Breakfast']:
+            print(f"{item['ID']:<5} {item['Name']:<35}")
+            
+        food_id_for_roll_out["Breakfast"] = int(input("Enter the Two ID for breakfast : ").split())
+        
+        print("Lunch Recomendations\n")
+        for item in response['recomendations']['Lunch']:
+            print(f"{item['ID']:<5} {item['Name']:<35}")
+        
+        food_id_for_roll_out["Lunch"] = input("Enter the ID for Lunch : ").split()
+
+        print("Dinner Recomendations\n")
+        for item in response['recomendations']['Dinner']:
+            print(f"{item['ID']:<5} {item['Name']:<35}")
+        
+        food_id_for_roll_out["Dinner"] = input("Enter the ID for Dinner : ").split()
+
+        print(food_id_for_roll_out)
+
     def add_food_item(self):
         food_name = input("Enter the food item name : ")
         price = input("Enter Price : ")
