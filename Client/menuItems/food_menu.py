@@ -19,9 +19,7 @@ class FoodMenu:
     def view_feedback(self):
         endpoint = "/view-feedback"
         data = {"role_name": self.role}
-        print(endpoint, data)
         response = self.server_communicator.send_request(endpoint, data)
-        print(response)
         print(f"{'FoodName':<35} {'UserName':<25} {'Rating':<10} {'Comment':<70} {'Date':<20}")
         
         for item in response['feedback']:
@@ -31,8 +29,6 @@ class FoodMenu:
         endpoint = "/view-recomendation"
         data = {"RoleName": self.role}
         response = self.server_communicator.send_request(endpoint, data)
-
-        print(response)
         print("\n\n")
         print(f"{'ID':<5} {'Name':<35}")
         

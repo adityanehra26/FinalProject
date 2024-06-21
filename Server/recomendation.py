@@ -13,11 +13,11 @@ class Recomendation:
         return positive_score - negative_score
 
     def recommend_food_items(self):
-        avg_ratings = self.db_handler.calculate_average_ratings()
+        all_comments = self.db_handler.calculate_average_ratings()
         recommendations = {"Breakfast": [], "Lunch": [], "Dinner": []}
         seen_items = {"Breakfast": set(), "Lunch": set(), "Dinner": set()}
 
-        for item in avg_ratings:
+        for item in all_comments:
             menu_item_id = item["MenuItemID"]
             menu_item_name = item["MenuItem"]
             avg_rating = item["AvgRating"]

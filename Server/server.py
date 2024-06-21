@@ -34,6 +34,7 @@ class Server:
             if not data:
                 raise ValueError("No data received")
             request = json.loads(data)
+            print("Request : ",request)
             endpoint = request.get("endpoint")
             if endpoint == "/login":
                 self.login_handler.login(request, client_socket)
@@ -45,8 +46,6 @@ class Server:
                 self.add_menu_item(client_socket, request)
             elif endpoint == "/update-menu-item":
                 self.update_menu_item(client_socket, request)
-            elif endpoint == "/roll-out-menu":
-                self.roll_out_menu(client_socket, request)
             elif endpoint == "/view-recomendation":
                 self.view_recomendation(client_socket, request)
             elif endpoint == "/view-feedback":
