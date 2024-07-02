@@ -25,34 +25,42 @@ class FoodMenu:
         for item in response['feedback']:
             print(f"{item['FoodName']:<35} {item['UserName']:<25} {item['Rating']:<10} {item['Comment']:<70} {item['Date']:<20}")
 
-    def roll_out_menu(self):
+    def get_recomendation(self):
         endpoint = "/view-recomendation"
         data = {"RoleName": self.role}
         response = self.server_communicator.send_request(endpoint, data)
-        print("\n\n")
+        print("\nBreakfast Recommendations\n")
         print(f"{'ID':<5} {'Name':<35}")
-        
-        food_id_for_roll_out = {"Breakfast": [], "Lunch": [], "Dinner": []}
 
-        print("BreakFast Recomendations\n")
+        food_id_for_roll_out = {"Breakfast": [], "Lunch": [], "Dinner": []}
         for item in response['recomendations']['Breakfast']:
             print(f"{item['ID']:<5} {item['Name']:<35}")
-            
-        food_id_for_roll_out["Breakfast"] = input("Enter the Two ID for breakfast : ").split()
-        
-        print("Lunch Recomendations\n")
+
+        food_id_for_roll_out["Breakfast"] = input("Enter the Two ID for breakfast: ").split()
+
+        print("\nLunch Recommendations")
         for item in response['recomendations']['Lunch']:
             print(f"{item['ID']:<5} {item['Name']:<35}")
-        
-        food_id_for_roll_out["Lunch"] = input("Enter the ID for Lunch : ").split()
 
-        print("Dinner Recomendations\n")
+        food_id_for_roll_out["Lunch"] = input("Enter the ID for Lunch: ").split()
+
+        print("\nDinner Recommendations")
         for item in response['recomendations']['Dinner']:
             print(f"{item['ID']:<5} {item['Name']:<35}")
-        
-        food_id_for_roll_out["Dinner"] = input("Enter the ID for Dinner : ").split()
 
-        print(food_id_for_roll_out)
+        food_id_for_roll_out["Dinner"] = input("Enter the ID for Dinner: ").split()
+
+        return food_id_for_roll_out
+
+    def roll_out_menu(self):
+        food_id_for_roll_out = self.get_recomendation()
+        endpoint = "/roll-out"
+        data = {"data": food_id_for_roll_out}
+        response = self.server_communicator.send_request(endpoint, data)
+        if response["status"] == "success":
+            print(response["message"])
+        else:
+            print(response["message"])
 
     def add_food_item(self):
         food_name = input("Enter the food item name : ")
