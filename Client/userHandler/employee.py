@@ -18,15 +18,17 @@ class Employee(User):
                     print(notification[1])
             else:
                 print()
-            print("\n1. Food Selection\n2. See Feedback\n3. Food Selection for tomorrow\n4. Exit/Logout")
+            print("\n1. View FoodItems\n2. See Feedback\n3. Food Selection for tomorrow\n4. Give Feedback\n5. Exit/Logout")
             choice = int(input("Enter a choice : "))
             if(choice == 1):
-                print("Food Selection")
+                self.food_menu.view_menu()
             elif(choice == 2):
                 self.food_menu.view_feedback()
             elif(choice == 3):
                 self.food_menu.vote_for_menu(self.id)
             elif(choice == 4):
+                self.food_menu.give_feedback(self.id)
+            elif(choice == 5):
                 print("\nEXITING...")
                 self.server_communicator.close_connection()
                 break

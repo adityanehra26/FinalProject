@@ -62,6 +62,8 @@ class Server:
                 self.send_notification(client_socket, request)
             elif endpoint == "/get-notification":
                 self.get_notification(client_socket)
+            elif endpoint == "/give-feedback":
+                self.give_feedback(client_socket, request)
             else:
                 response = {"status": "failure", "message": "Invalid endpoint"}
                 client_socket.sendall(json.dumps(response).encode())
@@ -174,23 +176,6 @@ class Server:
             response = {"status": "failure", "message": "An error occurred while voting"}
         client_socket.sendall(json.dumps(response).encode())
 
-    def give_feedback(self):
-        menu_item_id = input("Enter the Menu Item ID: ")
-        rating = input("Enter your Rating (e.g., 4.5): ")
-        comment = input("Enter your Comment: ")
-        endpoint = "/give-feedback"
-        data = {
-            "UserID": self.user_id,
-            "MenuItemID": int(menu_item_id),
-            "Rating": float(rating),
-            "Comment": comment,
-            "RoleName": "Employee"
-        }
-        response = self.server_communicator.send_request(endpoint, data)
-        if response["status"] == "success":
-            print(response["message"])
-        else:
-            print(response["message"])
 
     def view_feedback(self, client_socket, request):
         role_name = request.get("role_name")
@@ -235,11 +220,20 @@ class Server:
 
     def view_food_menu(self, client_socket, request):
         role_name = request.get("role_name")
-        if role_name in ["Admin", "Chef"]:
-            menu = self.db_handler.get_food_menu()
-            response = {"status": "success", "menu": menu}
+        menu = self.db_handler.get_food_menu()
+        response = {"status": "success", "menu": menu}
+        client_socket.sendall(json.dumps(response).encode())
+    
+    def give_feedback(self, client_socket, request):
+        role_name = request.get("RoleName")
+        if role_name == "Employee":
+            response = self.db_handler.give_menuItemfeedback(request)
+            if "success" in response:
+                response = {"status": "success", "message": "Successfully given feedback"}
+            else:
+                response = {"status": "failure", "message": "There is an error"}
         else:
-            response = {"status": "failure", "message": "Access denied"}
+            response = {"status": "failure", "message": "Invalid role for giving feedback"}
         client_socket.sendall(json.dumps(response).encode())
 
 if __name__ == "__main__":

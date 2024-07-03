@@ -1,5 +1,6 @@
 import mysql.connector
 from datetime import date
+import datetime
 
 class DatabaseHandler:
     def __init__(self, host, user, password, database):
@@ -256,6 +257,25 @@ class DatabaseHandler:
         cursor.close()
         return result
     
+    def give_menuItemfeedback(self, data):
+        cursor = self.conn.cursor()
+        query = """
+        INSERT INTO feedback (UserID, MenuItemID, Rating, Comment, Date)
+        VALUES (%s, %s, %s, %s, %s)
+        """
+        current_date = date.today().strftime('%Y-%m-%d')
+        values = (data["UserID"], data["MenuItemID"], float(data["Rating"]), data["Comment"], current_date)
+        
+        try:
+            cursor.execute(query, values)
+            self.conn.commit()
+            return "success"
+        except Exception as e:
+            print(f"An error occurred while inserting feedback: {e}")
+            self.conn.rollback()
+            return "error"
+        finally:
+            cursor.close()
     
 
 
