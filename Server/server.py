@@ -4,6 +4,7 @@ import json
 from database_handler import DatabaseHandler
 from login_handler import LoginHandler
 from recomendation import Recomendation
+import datetime
 
 class Server:
     def __init__(self, host, port, db_host, db_user, db_password, db_name):
@@ -57,6 +58,10 @@ class Server:
                 self.vote_for_menu(client_socket, request)
             elif endpoint == "/voting-items":
                 self.view_voting_items(client_socket)
+            elif endpoint == "/send-notification":
+                self.send_notification(client_socket, request)
+            elif endpoint == "/get-notification":
+                self.get_notification(client_socket)
             else:
                 response = {"status": "failure", "message": "Invalid endpoint"}
                 client_socket.sendall(json.dumps(response).encode())
@@ -74,6 +79,29 @@ class Server:
         finally:
             client_socket.close()
 
+    def send_notification(self, client_socket, request):
+        message = request.get("message")
+        try:
+            self.db_handler.send_notification(message)
+            response = {"status": "success", "message": "Notification sent successfully"}
+        except Exception as e:
+            print(f"Error sending notification: {e}")
+            response = {"status": "failure", "message": "Failed to send notification"}
+        client_socket.sendall(json.dumps(response).encode())
+
+    def get_notification(self, client_socket):
+        try:
+            notifications = self.db_handler.get_notification()
+            # Convert date objects to string
+            notifications = [
+                (notification_id, message, date.isoformat() if isinstance(date, datetime.date) else date)
+                for notification_id, message, date in notifications
+            ]
+            response = {"status": "success", "notifications": notifications}
+        except Exception as e:
+            print(f"Error fetching notifications: {e}")
+            response = {"status": "failure", "message": "Failed to fetch notifications"}
+        client_socket.sendall(json.dumps(response).encode())
 
     def roll_out_menu(self, client_socket, request):
         data = request.get("data")
@@ -83,7 +111,7 @@ class Server:
             response = {"status": "failure", "message": "Failed to truncate recommendedmenuitem table"}
             client_socket.sendall(json.dumps(response).encode())
             return
-
+        self.db_handler.reset_form_filled_status_for_all_user()
         results = []
         try:
             for meal, menu_items in data.items():
@@ -92,6 +120,7 @@ class Server:
                     result = self.db_handler.add_recommended_menu_item(menu_item_id, 0)  # Initial votes set to 0
                     results.append(result)
             if all(result == "success" for result in results):
+                self.db_handler.send_notification("Tomorrow's Menu Rolled Out, Fill your choice(If not).")
                 response = {"status": "success", "message": "Menu items are rolled out successfully"}
             else:
                 response = {"status": "failure", "message": "An error occurred while adding menu items"}
@@ -128,24 +157,40 @@ class Server:
             client_socket.sendall(json.dumps(response).encode())
 
     def vote_for_menu(self, client_socket, request):
+        employee_id = request.get("employee_id")
         data = request.get("data")
-        if not data:
-            raise ValueError("No data provided")
         try:
-            for meal_type, menu_item_id in data.items():
-                menu_item_id = int(menu_item_id)
-                result = self.db_handler.add_vote(menu_item_id)
-                if result != "success":
-                    response = {"status": "failure", "message": f"Failed to cast vote for {meal_type}"}
-                    client_socket.sendall(json.dumps(response).encode())
-                    return
-
-            response = {"status": "success", "message": "Votes successfully cast"}
+            form_filled_status = self.db_handler.check_form_filled_status(employee_id)
+            print(form_filled_status)
+            if form_filled_status == 1:
+                response = {"status": "failure", "message": "You already voted"}
+            else:
+                for meal, menu_item_id in data.items():
+                    self.db_handler.add_vote(menu_item_id)
+                self.db_handler.update_form_filled_status(employee_id, 1)
+                response = {"status": "success", "message": "Votes cast successfully"}
         except Exception as e:
             print(f"Error in vote_for_menu: {e}")
-            response = {"status": "failure", "message": "An error occurred while casting votes"}
+            response = {"status": "failure", "message": "An error occurred while voting"}
         client_socket.sendall(json.dumps(response).encode())
 
+    def give_feedback(self):
+        menu_item_id = input("Enter the Menu Item ID: ")
+        rating = input("Enter your Rating (e.g., 4.5): ")
+        comment = input("Enter your Comment: ")
+        endpoint = "/give-feedback"
+        data = {
+            "UserID": self.user_id,
+            "MenuItemID": int(menu_item_id),
+            "Rating": float(rating),
+            "Comment": comment,
+            "RoleName": "Employee"
+        }
+        response = self.server_communicator.send_request(endpoint, data)
+        if response["status"] == "success":
+            print(response["message"])
+        else:
+            print(response["message"])
 
     def view_feedback(self, client_socket, request):
         role_name = request.get("role_name")

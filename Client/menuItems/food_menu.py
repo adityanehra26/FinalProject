@@ -116,26 +116,59 @@ class FoodMenu:
         else:
             print(response["message"])
 
-    def vote_for_menu(self):
-        self.view_voting_items()
+    def view_voting_items(self):
+        endpoint = "/voting-items"
+        data = {}
+        response = self.server_communicator.send_request(endpoint, data)
+        response = response["data"]
+        voting_items = {"Breakfast": [], "Lunch": [], "Dinner": []}
+
+        print("Breakfast Recommendations")
+        print(f"{'MenuItemID':<10} {'Name':<35}")
+        for item in response['Breakfast']:
+            print(f"{item['MenuItemID']:<10} {item['MenuItemName']:<35}")
+            voting_items['Breakfast'].append(item)
+
+        print("Lunch Recommendations")
+        print(f"{'MenuItemID':<10} {'Name':<35} ")
+        for item in response['Lunch']:
+            print(f"{item['MenuItemID']:<10} {item['MenuItemName']:<35} ")
+            voting_items['Lunch'].append(item)
+
+        print("Dinner Recommendations")
+        print(f"{'MenuItemID':<10} {'Name':<35}")
+        for item in response['Dinner']:
+            print(f"{item['MenuItemID']:<10} {item['MenuItemName']:<35} ")
+            voting_items['Dinner'].append(item)
+
+        return voting_items
+
+    def vote_for_menu(self, employee_id):
+        voting_items = self.view_voting_items()
         votes = {}
         for meal_type in ["Breakfast", "Lunch", "Dinner"]:
-            menu_item_id = input(f"Enter the ID for {meal_type}: ")
-            votes[meal_type] = menu_item_id
+            valid_choices = [str(item['MenuItemID']) for item in voting_items[meal_type]]
+            while True:
+                menu_item_id = input(f"Enter the ID for {meal_type} ({', '.join(valid_choices)}): ")
+                if menu_item_id in valid_choices:
+                    votes[meal_type] = menu_item_id
+                    break
+                else:
+                    print(f"Incorrect choice. Please enter a valid ID for {meal_type} ({', '.join(valid_choices)}).")
 
         endpoint = "/voting"
-        data = {"data": votes}
+        data = {"employee_id": employee_id, "data": votes}
         response = self.server_communicator.send_request(endpoint, data)
         if response["status"] == "success":
             print(response["message"])
         else:
             print(response["message"])
 
-    def view_voting_items(self):
+
+    def view_yesterday_voting(self):
         endpoint = "/voting-items"
         data = {}
         response = self.server_communicator.send_request(endpoint, data)
-        print(response,"\n\n")
         categorized_items = response['data']
 
         for meal_type, items in categorized_items.items():
@@ -143,3 +176,5 @@ class FoodMenu:
             print(f"{'MenuItemID':<10} {'Name':<35} {'Votes':<5}")
             for item in items:
                 print(f"{item['MenuItemID']:<10} {item['MenuItemName']:<35} {item['Votes']:<5}")
+
+

@@ -1,4 +1,5 @@
 import mysql.connector
+from datetime import date
 
 class DatabaseHandler:
     def __init__(self, host, user, password, database):
@@ -204,7 +205,7 @@ class DatabaseHandler:
         SELECT ri.MenuItemID, mi.Name as MenuItemName, m.MealType, ri.Votes
         FROM recommendedmenuitem ri
         JOIN menuitem mi ON ri.MenuItemID = mi.ID
-        JOIN mealtypes m ON mi.MealTypeID = m.ID
+        JOIN mealtype m ON mi.MealTypeID = m.ID
         """
         cursor = self.conn.cursor()
         cursor.execute(query)
@@ -216,4 +217,45 @@ class DatabaseHandler:
         cursor.execute(query, (menu_item_id,))
         self.conn.commit()
         return "success"
+    
+    def reset_form_filled_status_for_all_user(self):
+        query = "UPDATE user SET FormFilledStatus = 0"
+        cursor = self.conn.cursor()
+        cursor.execute(query)
+        self.conn.commit()
+        return "success"
+
+    def check_form_filled_status(self, user_id):
+        query = "SELECT FormFilledStatus FROM user WHERE ID = %s"
+        cursor = self.conn.cursor()
+        cursor.execute(query, (user_id,))
+        result = cursor.fetchone()
+        return result[0]
+    
+    def update_form_filled_status(self, user_id, status):
+        query = "UPDATE user SET FormFilledStatus = %s WHERE ID = %s"
+        cursor = self.conn.cursor()
+        cursor.execute(query, (status, user_id))
+        self.conn.commit()
+        return "success"
+    
+    def send_notification(self, message):
+        cursor = self.conn.cursor()
+        today_date = date.today().strftime('%Y-%m-%d')
+        query = "INSERT INTO notification (Message, Date) VALUES (%s, %s)"
+        cursor.execute(query, (message, today_date))
+        self.conn.commit()
+        cursor.close()
+
+    def get_notification(self):
+        cursor = self.conn.cursor()
+        today_date = date.today().strftime('%Y-%m-%d')
+        query = "SELECT ID, Message, Date FROM notification WHERE Date = %s"
+        cursor.execute(query, (today_date,))
+        result = cursor.fetchall()
+        cursor.close()
+        return result
+    
+    
+
 

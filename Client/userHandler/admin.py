@@ -23,5 +23,7 @@ class Admin(User):
                 print("\nEXITING...")
                 self.server_communicator.close_connection()
                 break
+            else:
+                print("\nInvalid Choice")
 
 
