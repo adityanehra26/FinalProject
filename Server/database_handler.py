@@ -198,4 +198,22 @@ class DatabaseHandler:
         except mysql.connector.Error as err:
             print(f"Error: {err}")
             return "failure"
+        
+    def get_voting_items(self):
+        query = """
+        SELECT ri.MenuItemID, mi.Name as MenuItemName, m.MealType, ri.Votes
+        FROM recommendedmenuitem ri
+        JOIN menuitem mi ON ri.MenuItemID = mi.ID
+        JOIN mealtypes m ON mi.MealTypeID = m.ID
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(query)
+        return cursor.fetchall()
+
+    def add_vote(self, menu_item_id):
+        query = "UPDATE recommendedmenuitem SET Votes = Votes + 1 WHERE MenuItemID = %s"
+        cursor = self.conn.cursor()
+        cursor.execute(query, (menu_item_id,))
+        self.conn.commit()
+        return "success"
 

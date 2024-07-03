@@ -116,3 +116,30 @@ class FoodMenu:
         else:
             print(response["message"])
 
+    def vote_for_menu(self):
+        self.view_voting_items()
+        votes = {}
+        for meal_type in ["Breakfast", "Lunch", "Dinner"]:
+            menu_item_id = input(f"Enter the ID for {meal_type}: ")
+            votes[meal_type] = menu_item_id
+
+        endpoint = "/voting"
+        data = {"data": votes}
+        response = self.server_communicator.send_request(endpoint, data)
+        if response["status"] == "success":
+            print(response["message"])
+        else:
+            print(response["message"])
+
+    def view_voting_items(self):
+        endpoint = "/voting-items"
+        data = {}
+        response = self.server_communicator.send_request(endpoint, data)
+        print(response,"\n\n")
+        categorized_items = response['data']
+
+        for meal_type, items in categorized_items.items():
+            print(f"\n{meal_type} Recommendations")
+            print(f"{'MenuItemID':<10} {'Name':<35} {'Votes':<5}")
+            for item in items:
+                print(f"{item['MenuItemID']:<10} {item['MenuItemName']:<35} {item['Votes']:<5}")
