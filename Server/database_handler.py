@@ -320,11 +320,19 @@ class DatabaseHandler:
     def get_low_rating_items(self):
         cursor = self.conn.cursor()
         query = """
-        SELECT m.ID AS MenuItemID, m.Name AS MenuItem, AVG(f.Rating) AS AvgRating, f.Comment, m.MealTypeID
-        FROM feedback f
-        JOIN menuitem m ON f.MenuItemID = m.ID
-        GROUP BY f.MenuItemID, m.Name, f.Comment, m.MealTypeID
-        HAVING Avg(f.Rating) <= 2;
+    SELECT 
+        m.ID AS MenuItemID, 
+        m.Name AS MenuItem, 
+        AVG(f.Rating) AS AvgRating, 
+        m.MealTypeID
+    FROM 
+        feedback f
+    JOIN 
+        menuitem m ON f.MenuItemID = m.ID
+    GROUP BY 
+        m.ID, m.Name, m.MealTypeID
+    HAVING 
+        AVG(f.Rating) <= 2;
         """
         cursor.execute(query)
         result = cursor.fetchall()
