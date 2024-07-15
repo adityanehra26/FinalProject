@@ -11,7 +11,7 @@ class FoodMenu:
         data = {"role_name": self.role}
         response = self.server_communicator.send_request(endpoint, data)
         if response["status"] == "success":
-            print(f"{'FoodName':<35} {'AvgRating':<10}")
+            print(f"{'FoodName':<35} {'OverallRating':<10}")
             for item in response['low_rating_items']:
                 print(f"{item['FoodName']:<35} {item['AvgRating']:<10.2f}")
         else:
@@ -31,12 +31,21 @@ class FoodMenu:
     def view_feedback(self):
         endpoint = "/view-feedback"
         data = {"role_name": self.role}
-        print(endpoint, data)
         response = self.server_communicator.send_request(endpoint, data)
         print(f"{'FoodName':<35} {'UserName':<25} {'Rating':<10} {'Comment':<70} {'Date':<20}")
         
         for item in response['feedback']:
             print(f"{item['FoodName']:<35} {item['UserName']:<25} {item['Rating']:<10} {item['Comment']:<70} {item['Date']:<20}")
+
+    def view_momsrecipe(self):
+        endpoint = "/view-moms-recipe"
+        data = {"role_name": self.role}
+        response = self.server_communicator.send_request(endpoint, data)
+        print(f"{'UserID':<10} {'UserName':<25} {'Recipe':<70}")
+        
+        for item in response['feedback']:
+            print(f"{item['UserID']:<10} {item['UserName']:<25} {item['Recipe']:<70}")
+
 
     def give_feedback(self):
         menu_item_id = input("Enter the Menu Item ID: ")
@@ -303,6 +312,67 @@ class FoodMenu:
         }
         print(data)
         response = self.server_communicator.send_request(endpoint, data)
+        if response["status"] == "success":
+            print(response["message"])
+        else:
+            print(response["message"])
+
+    def add_moms_recipe(self):
+        recipe_name = input("Enter the name of the recipe: ")
+        ingredients = input("Enter the ingredients (separated by commas): ")
+        instructions = input("Enter the instructions: ")
+        meal_type = input("Enter the meal type (Breakfast, Lunch, Dinner): ")
+        meal_type_id = 0
+
+        if meal_type.lower() == "breakfast":
+            meal_type_id = 1
+        elif meal_type.lower() == "lunch":
+            meal_type_id = 2
+        elif meal_type.lower() == "dinner":
+            meal_type_id = 3
+
+        data = {
+            "UserID": self.user_id,
+            "RecipeName": recipe_name,
+            "Ingredients": ingredients,
+            "Instructions": instructions,
+            "MealTypeID": meal_type_id,
+            "RoleName": self.role
+        }
+
+        endpoint = "/add-moms-recipe"
+        response = self.server_communicator.send_request(endpoint, data)
+
+        if response["status"] == "success":
+            print(response["message"])
+        else:
+            print(response["message"])
+
+    def add_moms_recipe(self):
+        print("Enter the mom's recipe (press Enter once to finish):")
+        recipe = []
+
+        # Continuous input until single Enter is pressed
+        while True:
+            line = input()
+            if line == "":  # Check if the line is empty
+                break
+            recipe.append(line)
+        
+        recipe_text = "\n".join(recipe)  # Join lines into a single string
+
+        print("\nRecipe entered:")
+        print(recipe_text)  # Print the recipe back to the user
+
+        data = {
+            "UserID": self.user_id,
+            "Recipe": recipe_text,
+            "RoleName": self.role
+        }
+
+        endpoint = "/add-moms-recipe"
+        response = self.server_communicator.send_request(endpoint, data)
+
         if response["status"] == "success":
             print(response["message"])
         else:

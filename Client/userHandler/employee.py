@@ -17,7 +17,7 @@ class Employee(User):
                     print(notification[1])
             else:
                 print()
-            print("\n1. View Menu Item\n2. Update Profile \n3. Food Recommendation for Tomorrow\n4. Give Feedback\n5. View Feedback\n6. Exit")
+            print("\n1. View Menu Item\n2. Update Profile \n3. Food Recommendation for Tomorrow\n4. Give Feedback\n5. View Feedback\n6. Mom's Recipe\n7. Exit")
             choice = int(input("Enter a choice : "))
             if(choice == 1):
                 self.food_menu.view_menu()
@@ -29,7 +29,9 @@ class Employee(User):
                 self.food_menu.give_feedback()
             elif choice == 5:
                 self.food_menu.view_feedback()
-            elif(choice == 6):
+            elif choice == 6:
+                self.food_menu.add_moms_recipe()
+            elif(choice == 7):
                 print("\nEXITING...Bye")
                 self.server_communicator.close_connection()
                 exit()

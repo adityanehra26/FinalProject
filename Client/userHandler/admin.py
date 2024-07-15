@@ -9,7 +9,7 @@ class Admin(User):
     def user_menu(self):
         print(f"\nWelcome {self.name}({self.role})!")
         while True:
-            print("\n1. View Menu\n2. Add Menu Item\n3. Delete Menu Item\n4. Update Menu Item\n5. View Discard Item\n6. Exit")
+            print("\n1. View Menu\n2. Add Menu Item\n3. Delete Menu Item\n4. Update Menu Item\n5. View Discard Item\n6. View Mom's Recipes\n7. Exit")
             choice = int(input("Enter a choice : "))
             if(choice == 1):
                 self.food_menu.view_menu()
@@ -22,6 +22,8 @@ class Admin(User):
             elif(choice == 5):
                 self.food_menu.view_low_rating_items()
             elif(choice == 6):
+                self.food_menu.view_momsrecipe()
+            elif(choice == 7):
                 print("\nEXITING...Bye")
                 self.server_communicator.close_connection()
                 exit()

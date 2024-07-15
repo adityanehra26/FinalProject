@@ -9,7 +9,7 @@ class Chef(User):
     def user_menu(self):
         print(f"\nWelcome {self.name}({self.role})!")
         while True:
-            print("\n1. View Menu Item\n2. Roll Out Tomorrow's Menu\n3. View Yesterday's Vote \n4. Update Availability of Menu Item\n5. View Feedback\n6. View Discard Item\n7. Exit")
+            print("\n1. View Menu Item\n2. Roll Out Tomorrow's Menu\n3. View Yesterday's Vote \n4. Update Availability of Menu Item\n5. View Feedback\n6. View Discard Item\n7. Delete Menu Item\n8. View Mom's Recipes\n9. Exit")
             choice = int(input("Enter a choice : "))
             if(choice == 1):
                 self.food_menu.view_menu()
@@ -24,6 +24,10 @@ class Chef(User):
             elif choice == 6:
                 self.food_menu.view_low_rating_items()
             elif choice == 7:
+                self.food_menu.delete_menu_item()
+            elif choice == 8:
+                self.food_menu.view_momsrecipe()
+            elif choice == 9:
                 print("\nEXITING...Bye")
                 self.server_communicator.close_connection()
                 exit()
