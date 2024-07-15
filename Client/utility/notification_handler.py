@@ -1,5 +1,3 @@
-import json
-
 class NotificationHandler:
     def __init__(self, server_communicator):
         self.server_communicator = server_communicator

@@ -198,7 +198,6 @@ class DatabaseHandler:
         cursor.execute(query)
         avg_ratings = cursor.fetchall()
         cursor.close()
-        print(avg_ratings)
         return avg_ratings
 
     def add_recommended_menu_item(self, menu_item_id, votes):
@@ -275,7 +274,6 @@ class DatabaseHandler:
     
     def send_notification(self, message):
         cursor = self.conn.cursor()
-        print("send_notification")
         today_date = datetime.today().strftime('%Y-%m-%d')
         query = "INSERT INTO notification (Message, Date) VALUES (%s, %s)"
         cursor.execute(query, (message, today_date))
@@ -293,7 +291,6 @@ class DatabaseHandler:
     
     def update_userprofile(self, user_id, new_dietpreference, new_spicelevel, new_cuisinepreference, new_sweettooth):
         cursor = self.conn.cursor()
-        print((new_dietpreference, new_spicelevel, new_cuisinepreference, new_sweettooth, user_id))
         update_query = """
         UPDATE user
         SET DietPreference = %s, SpiceLevel = %s, CuisinePreference = %s, SweetTooth = %s
@@ -342,7 +339,7 @@ class DatabaseHandler:
             low_rating_items.append({
                 "MenuItemID": item[0],
                 "FoodName": item[1],
-                "AvgRating": item[2]
+                "AvgRating": float(item[2])
             })
         return low_rating_items
 

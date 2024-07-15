@@ -1,10 +1,23 @@
 from userHandler.user import User
-from menuItems.food_menu import FoodMenu
+from Modules.menu_viewer import MenuViewer
+from Modules.feedback_handler import FeedbackHandler
+from Modules.menu_manager import MenuManager
+from Modules.roll_out_manager import RolloutManager
+from Modules.user_preference_manager import UserPreferenceManager
+from Modules.voting_handler import VotingHandler
+from utility.notification_handler import NotificationHandler
 
 class Chef(User):
     def __init__(self, id, name, role, server_communicator):
         super().__init__(id, name, role, server_communicator)
-        self.food_menu = FoodMenu(server_communicator, self.role, self.id)
+        self.user_manager = UserPreferenceManager(server_communicator, self.role, self.id)
+        self.menu_manager = MenuManager(server_communicator, self.role, self.id)
+        self.notification_handler = NotificationHandler(server_communicator)
+        self.menu_viewer = MenuViewer(server_communicator, self.role)
+        self.feedback_handler = FeedbackHandler(server_communicator, self.role, self.id)
+        self.roll_out_manager = RolloutManager(server_communicator, self.role, self.id)
+        self.voting_handler = VotingHandler(server_communicator, self.role, self.id)
+
 
     def user_menu(self):
         print(f"\nWelcome {self.name}({self.role})!")
@@ -12,21 +25,21 @@ class Chef(User):
             print("\n1. View Menu Item\n2. Roll Out Tomorrow's Menu\n3. View Yesterday's Vote \n4. Update Availability of Menu Item\n5. View Feedback\n6. View Discard Item\n7. Delete Menu Item\n8. View Mom's Recipes\n9. Exit")
             choice = int(input("Enter a choice : "))
             if(choice == 1):
-                self.food_menu.view_menu()
+                self.menu_viewer.view_menu()
             elif(choice == 2):
-                self.food_menu.roll_out_menu()
+                self.roll_out_manager.roll_out_menu()
             elif choice == 3:
-                self.food_menu.view_yesterday_voting()
+                self.voting_handler.view_yesterday_voting()
             elif choice == 4:
-                self.food_menu.update_availabilty()
+                self.menu_manager.update_item_availability()
             elif choice == 5:
-                self.food_menu.view_feedback()
+                self.feedback_handler.view_feedback()
             elif choice == 6:
-                self.food_menu.view_low_rating_items()
+                self.menu_viewer.view_low_rating_items()
             elif choice == 7:
-                self.food_menu.delete_menu_item()
+                self.menu_manager.delete_menu_item()
             elif choice == 8:
-                self.food_menu.view_momsrecipe()
+                self.menu_viewer.view_momsrecipe()
             elif choice == 9:
                 print("\nEXITING...Bye")
                 self.server_communicator.close_connection()
