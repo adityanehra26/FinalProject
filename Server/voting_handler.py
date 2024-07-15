@@ -12,9 +12,7 @@ class VotingHandler:
 
     def vote_for_menu(self, client_socket, request):
         data = request.get("data")
-        print(data)
         user_id = request.get("employee_id")
-        print("User id", user_id)
         if self.db_handler.check_form_filled_status(user_id):
             response = {"status": "failure", "message": "Form already filled"}
             client_socket.sendall(json.dumps(response).encode())  
