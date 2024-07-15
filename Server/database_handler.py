@@ -1,6 +1,5 @@
 import mysql.connector
-from datetime import date
-import datetime
+from datetime import datetime
 
 class DatabaseHandler:
     def __init__(self, host, user, password, database):
@@ -11,12 +10,16 @@ class DatabaseHandler:
         self.conn = None
 
     def connect(self):
-        self.conn = mysql.connector.connect(
-            host=self.host,
-            user=self.user,
-            password=self.password,
-            database=self.database
-        )
+        try:
+            self.conn = mysql.connector.connect(
+                host=self.host,
+                user=self.user,
+                password=self.password,
+                database=self.database
+            )
+            print("Connection established")
+        except mysql.connector.Error as err:
+            print(f"Error: Could not establish connection: {err}")
 
     def check_login(self, username, password):
         cursor = self.conn.cursor()
@@ -81,13 +84,34 @@ class DatabaseHandler:
             })
         return feedback_details
     
+
+    def give_menuItemfeedback(self, data):
+        cursor = self.conn.cursor()
+        query = """
+        INSERT INTO feedback (UserID, MenuItemID, Rating, Comment, Date)
+        VALUES (%s, %s, %s, %s, %s)
+        """
+        current_date = datetime.now().date()  # Get current date
+        values = (data["UserID"], data["MenuItemID"], float(data["Rating"]), data["Comment"], current_date)
+        
+        try:
+            cursor.execute(query, values)
+            self.conn.commit()
+            return "success"
+        except Exception as e:
+            print(f"An error occurred while inserting feedback: {e}")
+            self.conn.rollback()
+            return "error"
+        finally:
+            cursor.close()
+
+    
     def add_menuItem(self, data):
         cursor = self.conn.cursor()
         query = """
         INSERT INTO menuitem (Name, Price, AvailabilityStatus, MealTypeID)
         VALUES (%s, %s, %s, %s)
         """
-        print(f"inside db {data}")
         values = (data["Name"], int(data["Price"]), data["AvailabilityStatus"], data["MealTypeID"])
         try:
             cursor.execute(query, values)
@@ -138,9 +162,29 @@ class DatabaseHandler:
         finally:
             cursor.close()
             
+    def update_menuItemavailabilty(self, menu_item_id, new_availability):
+        cursor = self.conn.cursor()
+        update_query = """
+        UPDATE menuitem
+        SET AvailabilityStatus = %s
+        WHERE ID = %s
+        """
+        try:
+            cursor.execute(update_query, (new_availability, menu_item_id))
+            self.conn.commit()
+            return "success"
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            self.conn.rollback()
+            return "error"
+        finally:
+            cursor.close()
+        
+            
     def close(self):
-        if self.conn:
+        if self.conn and self.conn.is_connected():
             self.conn.close()
+            print("Connection closed")
     
     def calculate_average_ratings(self):
         self.connect()
@@ -154,29 +198,9 @@ class DatabaseHandler:
         cursor.execute(query)
         avg_ratings = cursor.fetchall()
         cursor.close()
+        print(avg_ratings)
         return avg_ratings
 
-    def add_feedback(self, user_id, menu_item_id, rating, comment, date):
-        self.connect()
-        cursor = self.conn.cursor()
-        query = """
-            INSERT INTO feedback (UserID, MenuItemID, Rating, Comment, Date)
-            VALUES (%s, %s, %s, %s, %s)
-        """
-        values = (user_id, menu_item_id, rating, comment, date)
-        try:
-            cursor.execute(query, values)
-            self.conn.commit()
-            cursor.close()
-            self.close()
-            return True
-        except Exception as e:
-            print(f"Error adding feedback: {e}")
-            self.conn.rollback()
-            cursor.close()
-            self.close()
-            return False
-        
     def add_recommended_menu_item(self, menu_item_id, votes):
         cursor = self.conn.cursor()
         query = "INSERT INTO recommendedmenuitem (MenuItemID, Votes) VALUES (%s, %s)"
@@ -193,6 +217,9 @@ class DatabaseHandler:
 
     def truncate_recommended_menu_item_table(self):
         try:
+            if self.conn is None or not self.conn.is_connected():
+                raise Exception("MySQL Connection not available")
+
             cursor = self.conn.cursor()
             cursor.execute("TRUNCATE TABLE recommendedmenuitem")
             self.conn.commit()
@@ -200,16 +227,22 @@ class DatabaseHandler:
         except mysql.connector.Error as err:
             print(f"Error: {err}")
             return "failure"
+        except Exception as e:
+            print(f"Error: {e}")
+            return "failure"
+
         
-    def get_voting_items(self):
+    def get_voting_items(self, diet_preference):
         query = """
-        SELECT ri.MenuItemID, mi.Name as MenuItemName, m.MealType, ri.Votes
+        SELECT ri.MenuItemID, mi.Name as MenuItemName, m.MealType, ri.Votes, 
+            (mi.DietPreference = %s) AS is_preferred
         FROM recommendedmenuitem ri
         JOIN menuitem mi ON ri.MenuItemID = mi.ID
         JOIN mealtype m ON mi.MealTypeID = m.ID
+        ORDER BY is_preferred DESC, m.MealType, mi.Name
         """
         cursor = self.conn.cursor()
-        cursor.execute(query)
+        cursor.execute(query, (diet_preference,))
         return cursor.fetchall()
 
     def add_vote(self, menu_item_id):
@@ -218,7 +251,7 @@ class DatabaseHandler:
         cursor.execute(query, (menu_item_id,))
         self.conn.commit()
         return "success"
-    
+
     def reset_form_filled_status_for_all_user(self):
         query = "UPDATE user SET FormFilledStatus = 0"
         cursor = self.conn.cursor()
@@ -242,7 +275,8 @@ class DatabaseHandler:
     
     def send_notification(self, message):
         cursor = self.conn.cursor()
-        today_date = date.today().strftime('%Y-%m-%d')
+        print("send_notification")
+        today_date = datetime.today().strftime('%Y-%m-%d')
         query = "INSERT INTO notification (Message, Date) VALUES (%s, %s)"
         cursor.execute(query, (message, today_date))
         self.conn.commit()
@@ -250,32 +284,58 @@ class DatabaseHandler:
 
     def get_notification(self):
         cursor = self.conn.cursor()
-        today_date = date.today().strftime('%Y-%m-%d')
+        today_date = datetime.today().strftime('%Y-%m-%d')
         query = "SELECT ID, Message, Date FROM notification WHERE Date = %s"
         cursor.execute(query, (today_date,))
         result = cursor.fetchall()
         cursor.close()
         return result
     
-    def give_menuItemfeedback(self, data):
+    def update_userprofile(self, user_id, new_dietpreference, new_spicelevel, new_cuisinepreference, new_sweettooth):
         cursor = self.conn.cursor()
-        query = """
-        INSERT INTO feedback (UserID, MenuItemID, Rating, Comment, Date)
-        VALUES (%s, %s, %s, %s, %s)
+        print((new_dietpreference, new_spicelevel, new_cuisinepreference, new_sweettooth, user_id))
+        update_query = """
+        UPDATE user
+        SET DietPreference = %s, SpiceLevel = %s, CuisinePreference = %s, SweetTooth = %s
+        WHERE ID = %s
         """
-        current_date = date.today().strftime('%Y-%m-%d')
-        values = (data["UserID"], data["MenuItemID"], float(data["Rating"]), data["Comment"], current_date)
-        
         try:
-            cursor.execute(query, values)
+            cursor.execute(update_query, (new_dietpreference, new_spicelevel, new_cuisinepreference, new_sweettooth, user_id))
             self.conn.commit()
             return "success"
         except Exception as e:
-            print(f"An error occurred while inserting feedback: {e}")
+            print(f"An error occurred: {e}")
             self.conn.rollback()
             return "error"
         finally:
             cursor.close()
+
+    def get_diet_preference(self, user_id):
+        query = "SELECT DietPreference FROM user WHERE ID = %s"
+        cursor = self.conn.cursor()
+        cursor.execute(query, (user_id,))
+        result = cursor.fetchone()
+        return result[0] if result else None       
     
+    def get_low_rating_items(self):
+        cursor = self.conn.cursor()
+        query = """
+        SELECT m.ID AS MenuItemID, m.Name AS MenuItem, AVG(f.Rating) AS AvgRating, f.Comment, m.MealTypeID
+        FROM feedback f
+        JOIN menuitem m ON f.MenuItemID = m.ID
+        GROUP BY f.MenuItemID, m.Name, f.Comment, m.MealTypeID
+        HAVING Avg(f.Rating) <= 2;
+        """
+        cursor.execute(query)
+        result = cursor.fetchall()
+        cursor.close()
+        low_rating_items = []
+        for item in result:
+            low_rating_items.append({
+                "MenuItemID": item[0],
+                "FoodName": item[1],
+                "AvgRating": item[2]
+            })
+        return low_rating_items
 
 
