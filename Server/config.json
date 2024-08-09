@@ -1,0 +1,12 @@
+{
+    "database": {
+        "host": "localhost",
+        "user": "root",
+        "password": "12345678",
+        "database_name": "cafeteria"
+    },
+    "server": {
+        "host": "127.0.0.1",
+        "port": 12345
+    }
+}

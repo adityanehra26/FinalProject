@@ -1,6 +1,7 @@
 import socket
 import threading
 import json
+import os
 from database_handler import DatabaseHandler
 from login_handler import LoginHandler
 from recomendation import Recommendation
@@ -13,10 +14,11 @@ from rollout_menu import RollOut
 from update_user_profile import UpdateUser
 
 class Server:
-    def __init__(self, host, port, db_host, db_user, db_password, db_name):
-        self.host = host
-        self.port = port
-        self.db_handler = DatabaseHandler(db_host, db_user, db_password, db_name)
+    def __init__(self, config):
+        self.host = config['server']['host']
+        self.port = config['server']['port']
+        db_config = config['database']
+        self.db_handler = DatabaseHandler(db_config['host'], db_config['user'], db_config['password'], db_config['database_name'])
         self.login_handler = LoginHandler(self.db_handler)
         self.recomendation_engine = Recommendation(self.db_handler)
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -91,5 +93,8 @@ class Server:
         
             
 if __name__ == "__main__":
-    server = Server('localhost', 12345, 'localhost', 'root', '12345678', 'cafeteria')
+    config_file_path = os.path.join(os.path.dirname(__file__), 'config.json')
+    with open(config_file_path, 'r') as config_file:
+        config = json.load(config_file)
+    server = Server(config)
     server.start_server()

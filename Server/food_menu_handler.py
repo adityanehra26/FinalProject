@@ -67,11 +67,14 @@ class FoodMenuHandler:
         role_name = request.get("RoleName")
         menuitemid = request.get("MenuItemID")
         if role_name == "Admin":
-            response = self.db_handler.delete_menuItem(menuitemid)
-            if "success" in response:
-                response = {"status": "success", "message": "Item successfully Deleted"}
+            if not self.db_handler.menu_item_exists_by_id(menuitemid):
+                response = {"status": "failure", "message": "Item is not found"}
             else:
-                response = {"status": "failure", "message": "There is an error"}
+                response = self.db_handler.delete_menuItem(menuitemid)
+                if response == "success":
+                    response = {"status": "success", "message": "Item successfully deleted"}
+                else:
+                    response = {"status": "failure", "message": "There is an error"}
             client_socket.sendall(json.dumps(response).encode())
 
     def view_food_menu(self, client_socket, request):
