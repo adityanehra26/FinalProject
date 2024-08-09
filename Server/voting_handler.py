@@ -49,7 +49,7 @@ class VotingHandler:
                     "MenuItemName": item[1],
                     "Votes": item[3]
                 })
-
+            
             response = {"status": "success", "data": categorized_items}
             client_socket.sendall(json.dumps(response).encode())
         except Exception as e:

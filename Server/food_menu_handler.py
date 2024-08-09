@@ -21,25 +21,47 @@ class FoodMenuHandler:
     def add_menu_item(self, client_socket, request):
         role_name = request.get("RoleName")
         if role_name == "Admin":
-            response = self.db_handler.add_menuItem(request)
-            if "success" in response:
-                response = {"status": "success", "message": "Item successfully added"}
+            item_name = request.get("Name")
+            if self.db_handler.menu_item_exists(item_name):
+                response = {"status": "failure", "message": "Item already exists"}
             else:
-                response = {"status": "failure", "message": "There is an error"}
+                response = self.db_handler.add_menuItem(request)
+                if "success" in response:
+                    response = {"status": "success", "message": "Item successfully added"}
+                else:
+                    response = {"status": "failure", "message": "There is an error"}
             client_socket.sendall(json.dumps(response).encode())
+
+    def menu_item_exists(self, item_name):
+        cursor = self.conn.cursor()
+        query = "SELECT COUNT(*) FROM menuitem WHERE Name = %s"
+        cursor.execute(query, (item_name,))
+        count = cursor.fetchone()[0]
+        return count > 0
+
 
     def update_menu_item(self, client_socket, request):
         role_name = request.get("RoleName")
         menuitemid = request.get("MenuItemID")
         new_price = request.get("Price")
         new_availability = request.get("AvailabilityStatus")
+        diet_preference = request.get("DietPreference")
+        spice_level = request.get("SpiceLevel")
+        cuisine_preference = request.get("CuisinePreference")
+        sweet_tooth = request.get("SweetTooth")
+        
         if role_name == "Admin":
-            response = self.db_handler.update_menuItem(menuitemid, new_price, new_availability)
-            if "success" in response:
-                response = {"status": "success", "message": "Item successfully Updated"}
+            if self.db_handler.menu_item_exists_by_id(menuitemid):
+                response = self.db_handler.update_menuItem(menuitemid, new_price, new_availability, diet_preference, spice_level, cuisine_preference, sweet_tooth)
+                if "success" in response:
+                    response = {"status": "success", "message": "Item successfully Updated"}
+                else:
+                    response = {"status": "failure", "message": "There is an error"}
             else:
-                response = {"status": "failure", "message": "There is an error"}
-            client_socket.sendall(json.dumps(response).encode())       
+                response = {"status": "failure", "message": "Item does not exist"}
+            print(response)
+            client_socket.sendall(json.dumps(response).encode())
+
 
     def delete_menu_item(self, client_socket, request):
         role_name = request.get("RoleName")

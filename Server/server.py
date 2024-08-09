@@ -38,7 +38,6 @@ class Server:
         print(f"Server started on {self.host}:{self.port}")
         while True:
             client_socket, addr = self.server_socket.accept()
-            print(f"Connection from {addr}")
             client_thread = threading.Thread(target=self.handle_client, args=(client_socket,))
             client_thread.start()
 
@@ -48,7 +47,7 @@ class Server:
             if not data:
                 raise ValueError("No data received")
             request = json.loads(data)
-            print(request)
+            print("\n",request)
             endpoint = request.get("endpoint")
             food_menu_endpoints = ["/food_menu", "/delete-menu-item", "/add-menu-item", "/update-menu-item", "/update-availability", "/view-low-rating-items"]
             feedback_endpoints = ["/view-feedback", "/give-feedback"]

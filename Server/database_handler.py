@@ -109,10 +109,11 @@ class DatabaseHandler:
     def add_menuItem(self, data):
         cursor = self.conn.cursor()
         query = """
-        INSERT INTO menuitem (Name, Price, AvailabilityStatus, MealTypeID)
-        VALUES (%s, %s, %s, %s)
+        INSERT INTO menuitem (Name, Price, AvailabilityStatus, MealTypeID, DietPreference, SpiceLevel, CuisinePreference, SweetTooth)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """
-        values = (data["Name"], int(data["Price"]), data["AvailabilityStatus"], data["MealTypeID"])
+        values = (data["Name"], int(data["Price"]), data["AvailabilityStatus"], data["MealTypeID"], 
+                  data["DietPreference"], data["SpiceLevel"], data["CuisinePreference"], data["SweetTooth"])
         try:
             cursor.execute(query, values)
             self.conn.commit()
@@ -121,6 +122,14 @@ class DatabaseHandler:
             print(f"An error occurred: {e}")
             self.conn.rollback()
             return "error"
+
+    def menu_item_exists(self, item_name):
+        cursor = self.conn.cursor()
+        query = "SELECT COUNT(*) FROM menuitem WHERE Name = %s"
+        cursor.execute(query, (item_name,))
+        count = cursor.fetchone()[0]
+        return count > 0
+
     
     def delete_menuItem(self, menu_item_id):
         cursor = self.conn.cursor()
@@ -144,15 +153,15 @@ class DatabaseHandler:
         finally:
             cursor.close()
 
-    def update_menuItem(self, menu_item_id, new_price, new_availability):
+    def update_menuItem(self, menu_item_id, new_price, new_availability, diet_preference, spice_level, cuisine_preference, sweet_tooth):
         cursor = self.conn.cursor()
         update_query = """
         UPDATE menuitem
-        SET Price = %s, AvailabilityStatus = %s
+        SET Price = %s, AvailabilityStatus = %s, DietPreference = %s, SpiceLevel = %s, CuisinePreference = %s, SweetTooth = %s
         WHERE ID = %s
         """
         try:
-            cursor.execute(update_query, (new_price, new_availability, menu_item_id))
+            cursor.execute(update_query, (new_price, new_availability, diet_preference, spice_level, cuisine_preference, sweet_tooth, menu_item_id))
             self.conn.commit()
             return "success"
         except Exception as e:
@@ -161,6 +170,15 @@ class DatabaseHandler:
             return "error"
         finally:
             cursor.close()
+    
+    def menu_item_exists_by_id(self, item_id):
+        cursor = self.conn.cursor()
+        query = "SELECT COUNT(*) FROM menuitem WHERE ID = %s"
+        cursor.execute(query, (item_id,))
+        count = cursor.fetchone()[0]
+        cursor.close()
+        return count > 0
+
             
     def update_menuItemavailabilty(self, menu_item_id, new_availability):
         cursor = self.conn.cursor()
@@ -378,3 +396,5 @@ class DatabaseHandler:
                     "Recipe": item[2],
                 })
             return momsrecipe_details            
+
+
